@@ -1,0 +1,22 @@
+
+AdminCommandBroadcaster:
+  enabled: true
+  ignored-commands:
+    - /help
+    - /r
+    - /msg
+    - /me
+    - /teammsg
+    - /tell
+    - /tm
+    - /plugins
+    - /w
+    - /allowedcommands
+
+AdminToolbox:
+  enabled: true
+
+ItemEco:
+  enabled: true
+  currency-item: diamond
+  value-of-currency-item: 100

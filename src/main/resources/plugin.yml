@@ -1,0 +1,76 @@
+name: Ferret
+version: 0.0.1-PREALPHA
+main: life.ferret.ferretPlugin.main
+api-version: 1.19
+author: BeanGirlThing
+website: ferret.life
+description: This plugin is a collection of tools or "Microplugins" to assist in various server scenarios.
+softdepend:
+  - Vault
+
+commands:
+  allowedcommands:
+    description: Shows a list of commands which operators can use without broadcasting into chat
+    usage: /allowedcommands
+    permission: FerretPlugin.AdminCommandBroadcaster.allowedcommands
+    permission-message: You are not permitted to use this command
+
+  stash:
+    description: Allows an admin to store their inventory and current position while performing admin tasks
+    usage: /stash
+    permission: FerretPlugin.AdminToolbox.stash
+    permission-message: You are not permitted to use this command
+
+  unstash:
+    description: Allows an admin to withdraw their stashed inventory and position returning to regular play
+    usage: /unstash
+    permission: FerretPlugin.AdminToolbox.unstash
+    permission-message: You are not permitted to use this command
+
+  deposit:
+    description: Allows the user to deposit the specified amount of the currency item in exchange for Eco
+    usage: /deposit [quantity]
+    permission: FerretPlugin.ItemEco.deposit
+    permission-message: You are not permitted to use this command
+
+  withdraw:
+    description: Allows the user to withdraw the specified amount of Eco in exchange for the currency item
+    usage: /withdraw [value]
+    permission: FerretPlugin.ItemEco.withdraw
+    permission-message: You are not permitted to use this command
+
+
+  ferret:
+    description: Core plugin command to check status and modify the Ferret plugin.
+    usage: | 
+      /ferret (Shows the status of the plugin)
+      /ferret reload (Reloads the features of the plugin)
+      /ferret disable [feature] (Disables a specific feature of the plugin)
+      /ferret enable [feature] (Enables a specific feature of the plugin)
+    permission: FerretPlugin.ferret
+    permission-message: You are not permitted to use this command
+    aliases:
+      - dook
+
+permissions:
+  FerretPlugin.*:
+    description: Unrestricted access to all Ferret plugin features
+    children:
+      FerretPlugin.admin: true
+    default: op
+  FerretPlugin.admin:
+    description: Access to all 'Non Dangerous' administrator Ferret commands
+    children:
+      FerretPlugin.user: true
+      FerretPlugin.AdminToolbox.*: true
+      FerretPlugin.ferret: true
+    default: false
+  FerretPlugin.user:
+    description: Non administrator access to Ferret commands
+    children:
+      FerretPlugin.AdminCommandBroadcaster.allowedcommands: true
+      FerretPlugin.ferret: false
+      FerretPlugin.ItemEco.*: true
+      FerretPlugin.AdminToolbox.*: false
+    default: true
+
