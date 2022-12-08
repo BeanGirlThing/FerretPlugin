@@ -5,6 +5,7 @@ import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -45,9 +46,10 @@ public class withdrawCommand implements CommandExecutor {
         }
 
         Player commandUserPlayerObject = Bukkit.getServer().getPlayer(sender.getName());
-        int playerBalance = (int) econ.bankBalance(sender.getName()).balance;
+        int playerBalance = (int) econ.getBalance((OfflinePlayer) sender);
 
         int maximumPossibleWithdraw = helper.withdrawTotalPossible(playerBalance);
+
         if(maximumPossibleWithdraw < 1) {
             sender.sendMessage("You do not have sufficient funds to withdraw anything");
             return true;
@@ -89,7 +91,7 @@ public class withdrawCommand implements CommandExecutor {
             return true;
         }
 
-        EconomyResponse response = econ.bankWithdraw(sender.getName(), requestWithdrawAmount);
+        EconomyResponse response = econ.withdrawPlayer((OfflinePlayer) sender, requestWithdrawAmount);
 
         if(response.transactionSuccess()) {
 

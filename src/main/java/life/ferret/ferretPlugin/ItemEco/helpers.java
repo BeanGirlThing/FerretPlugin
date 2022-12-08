@@ -14,7 +14,8 @@ public class helpers {
     }
 
     public int withdrawTotalPossible(int playerBalance) {
-        return (int) Math.floor(playerBalance / valueOfCurrencyItem);
+        float totalItems = playerBalance / (float) valueOfCurrencyItem;
+        return (int) Math.floor(totalItems);
     }
 
     public int getWithdrawItemCount(int withdrawRequestAmount) {

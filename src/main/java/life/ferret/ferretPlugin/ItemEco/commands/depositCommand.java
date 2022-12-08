@@ -5,6 +5,7 @@ import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -42,8 +43,10 @@ public class depositCommand implements CommandExecutor {
         int currencyItemCount = 0;
 
         for(ItemStack itemStack : commandUserPlayerObject.getInventory().getStorageContents()) {
-            if(itemStack.getType() == helper.getCurrencyItem()) {
-                currencyItemCount += itemStack.getAmount();
+            if(itemStack != null) {
+                if (itemStack.getType() == helper.getCurrencyItem()) {
+                    currencyItemCount += itemStack.getAmount();
+                }
             }
         }
 
@@ -52,7 +55,7 @@ public class depositCommand implements CommandExecutor {
             return true;
         }
 
-        EconomyResponse response = econ.bankDeposit(sender.getName(),requestDepositQuantity * helper.getValueOfCurrencyItem());
+        EconomyResponse response = econ.depositPlayer((OfflinePlayer) sender,requestDepositQuantity * helper.getValueOfCurrencyItem());
 
         int totalRemoved = 0;
 
@@ -61,24 +64,26 @@ public class depositCommand implements CommandExecutor {
             ArrayList<ItemStack> updatedInventory = new ArrayList<>();
 
             for (ItemStack itemStack : commandUserPlayerObject.getInventory().getStorageContents()) {
-                if(itemStack.getType() == helper.getCurrencyItem() && totalRemoved != requestDepositQuantity) {
-                    int amountInStack = itemStack.getAmount();
-                    int plannedAndRemovedDelta = requestDepositQuantity - totalRemoved;
-                    if(amountInStack < plannedAndRemovedDelta) {
-                        itemStack.setAmount(0);
-                        totalRemoved += amountInStack;
-                    } else {
-                        itemStack.setAmount(amountInStack - plannedAndRemovedDelta);
+                if(itemStack != null) {
+                    if (itemStack.getType() == helper.getCurrencyItem() && totalRemoved != requestDepositQuantity) {
+                        int amountInStack = itemStack.getAmount();
+                        int plannedAndRemovedDelta = requestDepositQuantity - totalRemoved;
+                        if (amountInStack < plannedAndRemovedDelta) {
+                            itemStack.setAmount(0);
+                            totalRemoved += amountInStack;
+                        } else {
+                            itemStack.setAmount(amountInStack - plannedAndRemovedDelta);
+                        }
                     }
+                    updatedInventory.add(itemStack);
                 }
-                updatedInventory.add(itemStack);
             }
             commandUserPlayerObject.getInventory().setStorageContents(updatedInventory.toArray(ItemStack[]::new));
             commandUserPlayerObject.updateInventory();
             sender.sendMessage("Success! I have removed "+ requestDepositQuantity +" of the item from your inventory and credited your account with " + requestDepositQuantity * helper.getValueOfCurrencyItem());
             return true;
         } else {
-            rootPlugin.getLogger().warning("Deposit transaction failed!!! " + response);
+            rootPlugin.getLogger().warning("Deposit transaction failed!!! " + response.errorMessage);
             sender.sendMessage("Sorry! It appears something has gone wrong on my end, your items should still be in your inventory, please go tell an admin");
             return true;
         }

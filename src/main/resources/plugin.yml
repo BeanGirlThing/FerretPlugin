@@ -47,13 +47,13 @@ commands:
       /ferret reload (Reloads the features of the plugin)
       /ferret disable [feature] (Disables a specific feature of the plugin)
       /ferret enable [feature] (Enables a specific feature of the plugin)
-    permission: FerretPlugin.ferret
+    permission: FerretPlugin.core.ferret
     permission-message: You are not permitted to use this command
     aliases:
       - dook
 
 permissions:
-  FerretPlugin.*:
+  FerretPlugin.operator:
     description: Unrestricted access to all Ferret plugin features
     children:
       FerretPlugin.admin: true
@@ -62,15 +62,15 @@ permissions:
     description: Access to all 'Non Dangerous' administrator Ferret commands
     children:
       FerretPlugin.user: true
-      FerretPlugin.AdminToolbox.*: true
-      FerretPlugin.ferret: true
+      FerretPlugin.AdminToolbox.stash: true
+      FerretPlugin.AdminToolbox.unstash: true
+      FerretPlugin.core.ferret: true
     default: false
   FerretPlugin.user:
     description: Non administrator access to Ferret commands
     children:
       FerretPlugin.AdminCommandBroadcaster.allowedcommands: true
-      FerretPlugin.ferret: false
-      FerretPlugin.ItemEco.*: true
-      FerretPlugin.AdminToolbox.*: false
+      FerretPlugin.ItemEco.deposit: true
+      FerretPlugin.ItemEco.withdraw: true
     default: true
 
