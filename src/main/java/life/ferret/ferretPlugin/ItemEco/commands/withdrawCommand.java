@@ -35,15 +35,6 @@ public class withdrawCommand implements CommandExecutor {
         }
 
         int requestWithdrawAmount = helper.returnUsableInteger(args[0]);
-        if(requestWithdrawAmount % helper.getValueOfCurrencyItem() != 0) {
-            sender.sendMessage("You cannot withdraw a fraction of an item, the item is worth "+ helper.getValueOfCurrencyItem());
-            return true;
-        }
-
-        if(requestWithdrawAmount < helper.getValueOfCurrencyItem()) {
-            sender.sendMessage("You cannot withdraw less than the value of the item");
-            return true;
-        }
 
         Player commandUserPlayerObject = Bukkit.getServer().getPlayer(sender.getName());
         int playerBalance = (int) econ.getBalance((OfflinePlayer) sender);
@@ -59,12 +50,12 @@ public class withdrawCommand implements CommandExecutor {
             sender.sendMessage("You do not have sufficient funds to withdraw the quantity of which you are requesting");
         }
 
-        int actualItemCountFromWithdraw = helper.getWithdrawItemCount(requestWithdrawAmount);
+
         ArrayList<ItemStack> itemsToProvide = new ArrayList<>();
-        int stackTotal = (int) Math.floor(actualItemCountFromWithdraw / 64);
+        int stackTotal = (int) Math.floor(requestWithdrawAmount / 64);
         if(stackTotal == 0) {
             ItemStack tmpItemStack = new ItemStack(helper.getCurrencyItem());
-            tmpItemStack.setAmount(actualItemCountFromWithdraw);
+            tmpItemStack.setAmount(requestWithdrawAmount);
             itemsToProvide.add(tmpItemStack);
         } else {
             for(int i = 0; i <= stackTotal; i++) {
@@ -73,7 +64,7 @@ public class withdrawCommand implements CommandExecutor {
                 itemsToProvide.add(tmpItemStack);
             }
             ItemStack tmpItemStack = new ItemStack(helper.getCurrencyItem());
-            tmpItemStack.setAmount(actualItemCountFromWithdraw - (64 * stackTotal));
+            tmpItemStack.setAmount(requestWithdrawAmount - (64 * stackTotal));
             itemsToProvide.add(tmpItemStack);
 
         }
@@ -113,7 +104,7 @@ public class withdrawCommand implements CommandExecutor {
 
             commandUserPlayerObject.getInventory().setStorageContents(updatedInventory.toArray(ItemStack[]::new));
             commandUserPlayerObject.updateInventory();
-            sender.sendMessage("Success! I have added "+ actualItemCountFromWithdraw + " items to your inventory and withdrawn "+ requestWithdrawAmount +" from your account");
+            sender.sendMessage("Success! I have added "+ requestWithdrawAmount + " items to your inventory and withdrawn "+ requestWithdrawAmount * helper.getValueOfCurrencyItem() +" from your account");
             return true;
         } else {
             rootPlugin.getLogger().warning("Withdraw transaction failed!!! " + response);
