@@ -14,17 +14,20 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class depositCommand implements CommandExecutor {
 
     private helpers helper;
     private Economy econ;
     private Plugin rootPlugin;
+    private List<String> ignoredWorlds;
 
     public depositCommand(Material currencyItem, int currencyItemValue, Economy econ, Plugin rootPlugin) {
         helper = new helpers(currencyItem, currencyItemValue);
         this.econ = econ;
         this.rootPlugin = rootPlugin;
+        ignoredWorlds = rootPlugin.getConfig().getStringList("ItemEco.ignored-worlds");
     }
 
     @Override
@@ -41,6 +44,13 @@ public class depositCommand implements CommandExecutor {
 
         Player commandUserPlayerObject = Bukkit.getServer().getPlayer(sender.getName());
         int currencyItemCount = 0;
+        rootPlugin.getLogger().info("Player is using deposit in world "+ commandUserPlayerObject.getWorld().getName());
+        rootPlugin.getLogger().info("Ignored worlds for eco are: "+ ignoredWorlds.toString());
+
+        if(ignoredWorlds.contains(commandUserPlayerObject.getWorld().getName())) {
+            sender.sendMessage("You cannot use this here");
+            return true;
+        }
 
         for(ItemStack itemStack : commandUserPlayerObject.getInventory().getStorageContents()) {
             if(itemStack != null) {
@@ -50,7 +60,7 @@ public class depositCommand implements CommandExecutor {
             }
         }
 
-        if(currencyItemCount <= requestDepositQuantity) {
+        if(currencyItemCount < requestDepositQuantity) {
             sender.sendMessage("You do not have sufficient quantities of the item you are trying to deposit");
             return true;
         }

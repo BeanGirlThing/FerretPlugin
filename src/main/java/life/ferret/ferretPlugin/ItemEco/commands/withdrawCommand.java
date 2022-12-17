@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class withdrawCommand implements CommandExecutor {
 
@@ -21,11 +22,13 @@ public class withdrawCommand implements CommandExecutor {
     private helpers helper;
     private Economy econ;
     private Plugin rootPlugin;
+    private List<String> ignoredWorlds;
 
     public withdrawCommand(Material currencyItem, int currencyItemValue, Economy econ, Plugin rootPlugin) {
         helper = new helpers(currencyItem, currencyItemValue);
         this.econ = econ;
         this.rootPlugin = rootPlugin;
+        ignoredWorlds = rootPlugin.getConfig().getStringList("ItemEco.ignored-worlds");
     }
 
     @Override
@@ -39,6 +42,11 @@ public class withdrawCommand implements CommandExecutor {
         Player commandUserPlayerObject = Bukkit.getServer().getPlayer(sender.getName());
         int playerBalance = (int) econ.getBalance((OfflinePlayer) sender);
 
+        if(ignoredWorlds.contains(commandUserPlayerObject.getWorld().getName())) {
+            sender.sendMessage("You cannot use this here");
+            return true;
+        }
+
         int maximumPossibleWithdraw = helper.withdrawTotalPossible(playerBalance);
 
         if(maximumPossibleWithdraw < 1) {
@@ -46,8 +54,11 @@ public class withdrawCommand implements CommandExecutor {
             return true;
         }
 
-        if(requestWithdrawAmount > maximumPossibleWithdraw) {
+        int playerBalanceAfterTransaction = playerBalance - (requestWithdrawAmount * helper.getValueOfCurrencyItem());
+
+        if(requestWithdrawAmount > maximumPossibleWithdraw || playerBalanceAfterTransaction < 0) {
             sender.sendMessage("You do not have sufficient funds to withdraw the quantity of which you are requesting");
+            return true;
         }
 
 
@@ -58,7 +69,7 @@ public class withdrawCommand implements CommandExecutor {
             tmpItemStack.setAmount(requestWithdrawAmount);
             itemsToProvide.add(tmpItemStack);
         } else {
-            for(int i = 0; i <= stackTotal; i++) {
+            for(int i = 0; i < stackTotal; i++) {
                 ItemStack tmpItemStack = new ItemStack(helper.getCurrencyItem());
                 tmpItemStack.setAmount(64);
                 itemsToProvide.add(tmpItemStack);
@@ -82,7 +93,7 @@ public class withdrawCommand implements CommandExecutor {
             return true;
         }
 
-        EconomyResponse response = econ.withdrawPlayer((OfflinePlayer) sender, requestWithdrawAmount);
+        EconomyResponse response = econ.withdrawPlayer((OfflinePlayer) sender, requestWithdrawAmount * helper.getValueOfCurrencyItem());
 
         if(response.transactionSuccess()) {
 

@@ -20,3 +20,5 @@ ItemEco:
   enabled: true
   currency-item: diamond
   value-of-currency-item: 100
+  ignored-worlds:
+    - creative_world
