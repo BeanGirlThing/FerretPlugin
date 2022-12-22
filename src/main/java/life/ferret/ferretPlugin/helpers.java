@@ -1,7 +1,13 @@
-package life.ferret.ferretPlugin.ItemEco;
+package life.ferret.ferretPlugin;
 
 import org.apache.commons.lang3.math.NumberUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+
+import java.lang.reflect.Method;
+import java.util.logging.Level;
 
 public class helpers {
 
@@ -22,11 +28,15 @@ public class helpers {
         return withdrawRequestAmount / valueOfCurrencyItem;
     }
 
-    public int returnUsableInteger(String value) {
+    public Player getPlayerObjectFromName(String playerName) {
+        return Bukkit.getServer().getPlayer(playerName);
+    }
+
+    public Integer returnUsableInteger(String value) {
         if(NumberUtils.isNumber(value)) {
             return NumberUtils.toInt(value);
         } else {
-            return -1;
+            return null;
         }
     }
 
@@ -37,4 +47,8 @@ public class helpers {
     public Material getCurrencyItem() {
         return currencyItem;
     }
+
+    /*
+    Thank you to SainttX again for this https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
+     */
 }

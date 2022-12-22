@@ -11,12 +11,12 @@ public class featureStatus {
     public final int FAILED = 3;
     public final int UNIDENTIFIED_FEATURE = -1;
 
-
+    public final String PLAYER_TOOLBOX = "PlayerToolbox";
     public final String ADMIN_COMMAND_BROADCASTER = "AdminCommandBroadcaster";
     public final String ADMIN_TOOLBOX = "AdminToolbox";
     public final String ITEM_ECO = "ItemEco";
     public final String VAULT_API = "VaultAPI";
-
+    public final String NBT_API = "NBTAPI";
     public ArrayList<statusIndicator> features = new ArrayList<>();
 
     public featureStatus() {
@@ -24,6 +24,8 @@ public class featureStatus {
         this.addFeature(this.ADMIN_COMMAND_BROADCASTER, false);
         this.addFeature(this.ADMIN_TOOLBOX, false);
         this.addFeature(this.VAULT_API, true);
+        this.addFeature(this.PLAYER_TOOLBOX, false);
+        this.addFeature(this.NBT_API, true);
     }
 
     public void addFeature(String featureName, boolean isDependency) {

@@ -9,6 +9,8 @@ import life.ferret.ferretPlugin.FerretCoreTools.featureIsDisabledCommandFallback
 import life.ferret.ferretPlugin.FerretCoreTools.featureStatus;
 import life.ferret.ferretPlugin.ItemEco.commands.depositCommand;
 import life.ferret.ferretPlugin.ItemEco.commands.withdrawCommand;
+import life.ferret.ferretPlugin.PlayerToolbox.commands.flexCommand;
+import life.ferret.ferretPlugin.PlayerToolbox.commands.netherCoordCalculateCommand;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Material;
 import org.bukkit.command.CommandExecutor;
@@ -25,10 +27,15 @@ public class main extends JavaPlugin {
 
     private CommandExecutor featureIsDisabledCommandFallback;
 
+    private helpers helper;
+
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
         pluginStatus = new featureStatus();
+
+        Material currencyItemType = Material.matchMaterial(getConfig().getString("ItemEco.currency-item"));
+        helper = new helpers(currencyItemType, getConfig().getInt("ItemEco.value-of-currency-item"));
 
         featureIsDisabledCommandFallback = new featureIsDisabledCommandFallback();
 
@@ -36,6 +43,10 @@ public class main extends JavaPlugin {
 
         if(economyFeatures){
             enableItemEco();
+        }
+
+        if(checkForNBTAPI()) {
+            enablePlayerToolbox();
         }
 
         enableAdminCommandBroadcaster();
@@ -53,6 +64,27 @@ public class main extends JavaPlugin {
         }
 
         disableCoreTools();
+    }
+
+    private void enablePlayerToolbox() {
+        CommandExecutor netherCoordCalculateCommand = new netherCoordCalculateCommand(this, helper);
+        CommandExecutor flexCommand = new flexCommand(this,helper);
+        if(getConfig().getBoolean("PlayerToolbox.enabled")) {
+            if(pluginStatus.getFeatureStatus(pluginStatus.NBT_API) == pluginStatus.FAILED) {
+                getLogger().warning("Disabling PlayerToolbox as NBTAPI is disabled. Please install > https://www.spigotmc.org/resources/nbt-api.7939/");
+                pluginStatus.setFeatureStatus(pluginStatus.PLAYER_TOOLBOX, pluginStatus.DISABLED);
+            } else {
+                this.getCommand("nethercoord").setExecutor(netherCoordCalculateCommand);
+                this.getCommand("flex").setExecutor(flexCommand);
+                pluginStatus.setFeatureStatus(pluginStatus.PLAYER_TOOLBOX, pluginStatus.ENABLED);
+            }
+        } else {
+            pluginStatus.setFeatureStatus(pluginStatus.PLAYER_TOOLBOX, pluginStatus.DISABLED);
+        }
+    }
+
+    private boolean checkForNBTAPI() {
+        return getServer().getPluginManager().getPlugin("NBTAPI")!=null;
     }
 
     private void enableCoreTools() {
@@ -85,10 +117,13 @@ public class main extends JavaPlugin {
 
     public void enableItemEco() {
         Material currencyItemType = Material.matchMaterial(getConfig().getString("ItemEco.currency-item"));
-        CommandExecutor depositCommand = new depositCommand(currencyItemType, getConfig().getInt("ItemEco.value-of-currency-item"),econ,this);
-        CommandExecutor withdrawCommand = new withdrawCommand(currencyItemType, getConfig().getInt("ItemEco.value-of-currency-item"),econ,this);
-        if(getConfig().getBoolean("ItemEco.enabled") || pluginStatus.getFeatureStatus(pluginStatus.VAULT_API) == pluginStatus.ENABLED) {
-            if(currencyItemType == null) {
+        CommandExecutor depositCommand = new depositCommand(econ,this, helper);
+        CommandExecutor withdrawCommand = new withdrawCommand(econ,this, helper);
+        if(getConfig().getBoolean("ItemEco.enabled")) {
+            if(pluginStatus.getFeatureStatus(pluginStatus.VAULT_API) == pluginStatus.FAILED) {
+                getLogger().warning("Disabling ItemEco as Vault is disabled");
+                pluginStatus.setFeatureStatus(pluginStatus.ITEM_ECO, pluginStatus.DISABLED);
+            } else if(currencyItemType == null) {
                 getLogger().warning("Disabling ItemEco as item specified in config cannot be found");
                 pluginStatus.setFeatureStatus(pluginStatus.ITEM_ECO, pluginStatus.DISABLED);
             } else {
@@ -99,7 +134,7 @@ public class main extends JavaPlugin {
             }
         } else {
             if(pluginStatus.getFeatureStatus(pluginStatus.VAULT_API) != pluginStatus.ENABLED) {
-                getLogger().warning("ItemEco has been disabled due to Vault API status FAILED");
+                getLogger().warning("ItemEco has been disabled due to Vault API status FAILED. Please install > https://www.spigotmc.org/resources/vault.34315/");
             } else {
                 getLogger().info("ItemEco disabled by config");
             }
@@ -164,6 +199,11 @@ public class main extends JavaPlugin {
     public void disableItemEco() {
         pluginStatus.setFeatureStatus(pluginStatus.ITEM_ECO, pluginStatus.DISABLED);
         getLogger().info("ItemEco is now disabled");
+    }
+
+    public void disablePlayerToolbox() {
+        pluginStatus.setFeatureStatus(pluginStatus.PLAYER_TOOLBOX, pluginStatus.DISABLED);
+        getLogger().info("PlayerToolbox is now disabled");
     }
 
 }

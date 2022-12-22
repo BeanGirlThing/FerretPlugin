@@ -7,6 +7,7 @@ website: ferret.life
 description: This plugin is a collection of tools or "Microplugins" to assist in various server scenarios.
 softdepend:
   - Vault
+  - NBTAPI
 
 commands:
   allowedcommands:
@@ -52,6 +53,17 @@ commands:
     aliases:
       - dook
 
+  nethercoord:
+    description: Shows equivalent nether coordinate for given overworld coordinates
+    usage: /nethercoord [optional X] [optional Y]
+    permission: FerretPlugin.PlayerToolbox.nethercoord
+    permission-message: You are not permitted to use this command
+  flex:
+    description: Allows you to be an asshole
+    usage: /flex
+    permission: FerretPlugin.PlayerToolbox.flex
+    permission-message: You are not permitted to use this command
+
 permissions:
   FerretPlugin.operator:
     description: Unrestricted access to all Ferret plugin features
@@ -72,5 +84,7 @@ permissions:
       FerretPlugin.AdminCommandBroadcaster.allowedcommands: true
       FerretPlugin.ItemEco.deposit: true
       FerretPlugin.ItemEco.withdraw: true
+      FerretPlugin.PlayerToolbox.nethercoord: true
+      FerretPlugin.PlayerToolbox.flex: true
     default: true
 

@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -30,9 +31,12 @@ public class stashCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
-        if(commandSender.hasPermission("FerretPlugin.AdminToolbox.stash")) {
+
+        if (commandSender instanceof ConsoleCommandSender) {
+            commandSender.sendMessage("Console cannot use this command");
+        } else {
             Player commandUserPlayerObject = Bukkit.getServer().getPlayer(commandSender.getName());
-            if(commandUserPlayerObject != null){
+            if (commandUserPlayerObject != null) {
                 PlayerInventory inventory = commandUserPlayerObject.getInventory();
                 double health = commandUserPlayerObject.getHealth();
                 Location location = commandUserPlayerObject.getLocation();
@@ -40,8 +44,8 @@ public class stashCommand implements CommandExecutor {
 
                 ArrayList<Map<String, Object>> tmpInventoryArray = new ArrayList<>();
 
-                for(ItemStack item : commandUserPlayerObject.getInventory().getStorageContents()) {
-                    if(item != null) {
+                for (ItemStack item : commandUserPlayerObject.getInventory().getStorageContents()) {
+                    if (item != null) {
                         tmpInventoryArray.add(item.serialize());
                     } else {
                         tmpInventoryArray.add(null);
@@ -50,8 +54,8 @@ public class stashCommand implements CommandExecutor {
 
                 ArrayList<Map<String, Object>> tmpArmourArray = new ArrayList<>();
 
-                for(ItemStack item : commandUserPlayerObject.getInventory().getArmorContents()) {
-                    if(item != null) {
+                for (ItemStack item : commandUserPlayerObject.getInventory().getArmorContents()) {
+                    if (item != null) {
                         tmpArmourArray.add(item.serialize());
                     } else {
                         tmpArmourArray.add(null);
@@ -59,7 +63,7 @@ public class stashCommand implements CommandExecutor {
                 }
 
                 @SuppressWarnings("unchecked")
-                stash playerStash = new stash(health,tmpInventoryArray.toArray(Map[]::new),location.serialize(),experience, inventory.getItemInOffHand().serialize(),tmpArmourArray.toArray(Map[]::new));
+                stash playerStash = new stash(health, tmpInventoryArray.toArray(Map[]::new), location.serialize(), experience, inventory.getItemInOffHand().serialize(), tmpArmourArray.toArray(Map[]::new));
                 try {
                     stashFileController.createNewStash(commandSender.getName(), playerStash);
                 } catch (IOException e) {
@@ -72,8 +76,9 @@ public class stashCommand implements CommandExecutor {
                 commandUserPlayerObject.sendMessage(ChatColor.GREEN + "Stash store complete");
                 return true;
             }
+            return true;
         }
-        return false;
+        return true;
     }
 }
 

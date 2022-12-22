@@ -24,5 +24,4 @@ public class eventListener implements Listener {
             Bukkit.broadcastMessage("Op user " + ChatColor.RED + commandUser.getName() + ChatColor.RESET + " has just run the command: " + ChatColor.GREEN + event.getMessage() + ChatColor.RESET);
         }
     }
-
 }

@@ -16,6 +16,9 @@ AdminCommandBroadcaster:
 AdminToolbox:
   enabled: true
 
+PlayerToolbox:
+  enabled: true
+
 ItemEco:
   enabled: true
   currency-item: diamond
