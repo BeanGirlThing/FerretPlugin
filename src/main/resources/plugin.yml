@@ -30,13 +30,13 @@ commands:
 
   deposit:
     description: Allows the user to deposit the specified amount of the currency item in exchange for Eco
-    usage: /deposit [quantity]
+    usage: /deposit [amount]
     permission: FerretPlugin.ItemEco.deposit
     permission-message: You are not permitted to use this command
 
   withdraw:
     description: Allows the user to withdraw the specified amount of Eco in exchange for the currency item
-    usage: /withdraw [value]
+    usage: /withdraw [amount]
     permission: FerretPlugin.ItemEco.withdraw
     permission-message: You are not permitted to use this command
 
@@ -55,7 +55,7 @@ commands:
 
   nethercoord:
     description: Shows equivalent nether coordinate for given overworld coordinates
-    usage: /nethercoord [optional X] [optional Y]
+    usage: /nethercoord [X] [Z]
     permission: FerretPlugin.PlayerToolbox.nethercoord
     permission-message: You are not permitted to use this command
   flex:

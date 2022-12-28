@@ -1,6 +1,7 @@
 package life.ferret.ferretPlugin.ItemEco.commands;
 
 import life.ferret.ferretPlugin.helpers;
+import life.ferret.ferretPlugin.main;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.OfflinePlayer;
@@ -23,6 +24,9 @@ public class depositCommand implements CommandExecutor {
     private Plugin rootPlugin;
     private List<String> ignoredWorlds;
 
+    private final String name = main.featurecontroller.ITEM_ECO;
+    private final String disabledMessage = "Feature is currently disabled";
+
     public depositCommand(Economy econ, Plugin rootPlugin, helpers helper) {
         this.helper = helper;
         this.econ = econ;
@@ -32,74 +36,77 @@ public class depositCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (sender instanceof ConsoleCommandSender) {
-            sender.sendMessage("Console cannot use this command");
-        } else {
-            if (args.length != 1) {
-                return false;
-            }
-
-            int requestDepositQuantity = Optional.ofNullable(helper.returnUsableInteger(args[0])).orElse(-1);
-            if (requestDepositQuantity < 1) {
-                sender.sendMessage("You cannot deposit less than one item");
-                return true;
-            }
-
-            Player commandUserPlayerObject = helper.getPlayerObjectFromName(sender.getName());
-            int currencyItemCount = 0;
-            rootPlugin.getLogger().info("Player is using deposit in world " + commandUserPlayerObject.getWorld().getName());
-            rootPlugin.getLogger().info("Ignored worlds for eco are: " + ignoredWorlds.toString());
-
-            if (ignoredWorlds.contains(commandUserPlayerObject.getWorld().getName())) {
-                sender.sendMessage("You cannot use this here");
-                return true;
-            }
-
-            for (ItemStack itemStack : commandUserPlayerObject.getInventory().getStorageContents()) {
-                if (itemStack != null) {
-                    if (itemStack.getType() == helper.getCurrencyItem()) {
-                        currencyItemCount += itemStack.getAmount();
-                    }
+        if (main.featurecontroller.continuePermitted(name,sender,disabledMessage)) {
+            if (sender instanceof ConsoleCommandSender) {
+                sender.sendMessage("Console cannot use this command");
+            } else {
+                if (args.length != 1) {
+                    return false;
                 }
-            }
 
-            if (currencyItemCount < requestDepositQuantity) {
-                sender.sendMessage("You do not have sufficient quantities of the item you are trying to deposit");
-                return true;
-            }
+                int requestDepositQuantity = Optional.ofNullable(helper.returnUsableInteger(args[0])).orElse(-1);
+                if (requestDepositQuantity < 1) {
+                    sender.sendMessage("You cannot deposit less than one item");
+                    return true;
+                }
 
-            EconomyResponse response = econ.depositPlayer((OfflinePlayer) sender, requestDepositQuantity * helper.getValueOfCurrencyItem());
+                Player commandUserPlayerObject = helper.getPlayerObjectFromName(sender.getName());
+                int currencyItemCount = 0;
+                rootPlugin.getLogger().info("Player is using deposit in world " + commandUserPlayerObject.getWorld().getName());
+                rootPlugin.getLogger().info("Ignored worlds for eco are: " + ignoredWorlds.toString());
 
-            int totalRemoved = 0;
-
-            if (response.transactionSuccess()) {
-
-                ArrayList<ItemStack> updatedInventory = new ArrayList<>();
+                if (ignoredWorlds.contains(commandUserPlayerObject.getWorld().getName())) {
+                    sender.sendMessage("You cannot use this here");
+                    return true;
+                }
 
                 for (ItemStack itemStack : commandUserPlayerObject.getInventory().getStorageContents()) {
                     if (itemStack != null) {
-                        if (itemStack.getType() == helper.getCurrencyItem() && totalRemoved != requestDepositQuantity) {
-                            int amountInStack = itemStack.getAmount();
-                            int plannedAndRemovedDelta = requestDepositQuantity - totalRemoved;
-                            if (amountInStack < plannedAndRemovedDelta) {
-                                itemStack.setAmount(0);
-                                totalRemoved += amountInStack;
-                            } else {
-                                itemStack.setAmount(amountInStack - plannedAndRemovedDelta);
-                            }
+                        if (itemStack.getType() == helper.getCurrencyItem()) {
+                            currencyItemCount += itemStack.getAmount();
                         }
-                        updatedInventory.add(itemStack);
                     }
                 }
-                commandUserPlayerObject.getInventory().setStorageContents(updatedInventory.toArray(ItemStack[]::new));
-                commandUserPlayerObject.updateInventory();
-                sender.sendMessage("Success! I have removed " + requestDepositQuantity + " of the item from your inventory and credited your account with " + requestDepositQuantity * helper.getValueOfCurrencyItem());
-                return true;
-            } else {
-                rootPlugin.getLogger().warning("Deposit transaction failed!!! " + response.errorMessage);
-                sender.sendMessage("Sorry! It appears something has gone wrong on my end, your items should still be in your inventory, please go tell an admin");
-                return true;
+
+                if (currencyItemCount < requestDepositQuantity) {
+                    sender.sendMessage("You do not have sufficient quantities of the item you are trying to deposit");
+                    return true;
+                }
+
+                EconomyResponse response = econ.depositPlayer((OfflinePlayer) sender, requestDepositQuantity * helper.getValueOfCurrencyItem());
+
+                int totalRemoved = 0;
+
+                if (response.transactionSuccess()) {
+
+                    ArrayList<ItemStack> updatedInventory = new ArrayList<>();
+
+                    for (ItemStack itemStack : commandUserPlayerObject.getInventory().getStorageContents()) {
+                        if (itemStack != null) {
+                            if (itemStack.getType() == helper.getCurrencyItem() && totalRemoved != requestDepositQuantity) {
+                                int amountInStack = itemStack.getAmount();
+                                int plannedAndRemovedDelta = requestDepositQuantity - totalRemoved;
+                                if (amountInStack < plannedAndRemovedDelta) {
+                                    itemStack.setAmount(0);
+                                    totalRemoved += amountInStack;
+                                } else {
+                                    itemStack.setAmount(amountInStack - plannedAndRemovedDelta);
+                                }
+                            }
+                            updatedInventory.add(itemStack);
+                        }
+                    }
+                    commandUserPlayerObject.getInventory().setStorageContents(updatedInventory.toArray(ItemStack[]::new));
+                    commandUserPlayerObject.updateInventory();
+                    sender.sendMessage("Success! I have removed " + requestDepositQuantity + " of the item from your inventory and credited your account with " + requestDepositQuantity * helper.getValueOfCurrencyItem());
+                    return true;
+                } else {
+                    rootPlugin.getLogger().warning("Deposit transaction failed!!! " + response.errorMessage);
+                    sender.sendMessage("Sorry! It appears something has gone wrong on my end, your items should still be in your inventory, please go tell an admin");
+                    return true;
+                }
             }
+            return true;
         }
         return true;
     }

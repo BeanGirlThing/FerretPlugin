@@ -4,14 +4,15 @@ import life.ferret.ferretPlugin.AdminCommandBroadcaster.commands.checkAllowListC
 import life.ferret.ferretPlugin.AdminCommandBroadcaster.listeners.eventListener;
 import life.ferret.ferretPlugin.AdminToolbox.commands.stashCommand;
 import life.ferret.ferretPlugin.AdminToolbox.commands.unstashCommand;
+import life.ferret.ferretPlugin.FerretCoreTools.commandSkeleton;
 import life.ferret.ferretPlugin.FerretCoreTools.commands.ferretCommand;
-import life.ferret.ferretPlugin.FerretCoreTools.featureIsDisabledCommandFallback;
-import life.ferret.ferretPlugin.FerretCoreTools.featureStatus;
+import life.ferret.ferretPlugin.FerretCoreTools.featureController;
 import life.ferret.ferretPlugin.ItemEco.commands.depositCommand;
 import life.ferret.ferretPlugin.ItemEco.commands.withdrawCommand;
 import life.ferret.ferretPlugin.PlayerToolbox.commands.flexCommand;
 import life.ferret.ferretPlugin.PlayerToolbox.commands.netherCoordCalculateCommand;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.event.Listener;
@@ -23,35 +24,29 @@ public class main extends JavaPlugin {
     private Economy econ = null;
     private boolean economyFeatures = true;
 
-    private featureStatus pluginStatus;
-
-    private CommandExecutor featureIsDisabledCommandFallback;
+    public static featureController featurecontroller;
 
     private helpers helper;
 
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
-        pluginStatus = new featureStatus();
+        featurecontroller = new featureController(this);
 
         Material currencyItemType = Material.matchMaterial(getConfig().getString("ItemEco.currency-item"));
         helper = new helpers(currencyItemType, getConfig().getInt("ItemEco.value-of-currency-item"));
 
-        featureIsDisabledCommandFallback = new featureIsDisabledCommandFallback();
-
         setupVault();
+        enableItemEco();
 
-        if(economyFeatures){
-            enableItemEco();
-        }
+        checkForNBTAPI();
+        enablePlayerToolbox();
 
-        if(checkForNBTAPI()) {
-            enablePlayerToolbox();
-        }
 
         enableAdminCommandBroadcaster();
         enableAdminToolbox();
-        enableCoreTools();
+
+        enableCoreTools(); // Leave on bottom to enable last
     }
 
     @Override
@@ -62,24 +57,24 @@ public class main extends JavaPlugin {
         if(economyFeatures) {
             disableItemEco();
         }
+        disablePlayerToolbox();
 
-        disableCoreTools();
+        disableCoreTools(); // Leave on bottom to disable last
     }
 
     private void enablePlayerToolbox() {
-        CommandExecutor netherCoordCalculateCommand = new netherCoordCalculateCommand(this, helper);
-        CommandExecutor flexCommand = new flexCommand(this,helper);
+        commandSkeleton netherCoordCalculateCommand = new commandSkeleton("nethercoord", new netherCoordCalculateCommand(helper));
+        commandSkeleton flexCommand = new commandSkeleton("flex", new flexCommand(this,helper));
+        featurecontroller.setCommands(featurecontroller.PLAYER_TOOLBOX, new commandSkeleton[]{netherCoordCalculateCommand,flexCommand});
         if(getConfig().getBoolean("PlayerToolbox.enabled")) {
-            if(pluginStatus.getFeatureStatus(pluginStatus.NBT_API) == pluginStatus.FAILED) {
+            if(featurecontroller.getFeatureStatus(featurecontroller.NBT_API) == featurecontroller.FAILED) {
                 getLogger().warning("Disabling PlayerToolbox as NBTAPI is disabled. Please install > https://www.spigotmc.org/resources/nbt-api.7939/");
-                pluginStatus.setFeatureStatus(pluginStatus.PLAYER_TOOLBOX, pluginStatus.DISABLED);
+                featurecontroller.disableFeature(featurecontroller.PLAYER_TOOLBOX);
             } else {
-                this.getCommand("nethercoord").setExecutor(netherCoordCalculateCommand);
-                this.getCommand("flex").setExecutor(flexCommand);
-                pluginStatus.setFeatureStatus(pluginStatus.PLAYER_TOOLBOX, pluginStatus.ENABLED);
+                featurecontroller.enableFeature(featurecontroller.PLAYER_TOOLBOX);
             }
         } else {
-            pluginStatus.setFeatureStatus(pluginStatus.PLAYER_TOOLBOX, pluginStatus.DISABLED);
+            featurecontroller.disableFeature(featurecontroller.PLAYER_TOOLBOX);
         }
     }
 
@@ -88,7 +83,7 @@ public class main extends JavaPlugin {
     }
 
     private void enableCoreTools() {
-        CommandExecutor ferretCommand = new ferretCommand(pluginStatus, this);
+        CommandExecutor ferretCommand = new ferretCommand(featurecontroller, this);
         this.getCommand("ferret").setExecutor(ferretCommand);
         this.getLogger().info("Core tools enabled");
     }
@@ -97,9 +92,9 @@ public class main extends JavaPlugin {
         if(!vaultSetupEconomy()) {
             economyFeatures = false;
             getLogger().severe("Unable to hook to economy system, marking vault API as failed");
-            pluginStatus.setFeatureStatus(pluginStatus.VAULT_API, pluginStatus.FAILED);
+            featurecontroller.setFeatureStatus(featurecontroller.VAULT_API, featurecontroller.FAILED);
         } else {
-            pluginStatus.setFeatureStatus(pluginStatus.VAULT_API, pluginStatus.ENABLED);
+            featurecontroller.setFeatureStatus(featurecontroller.VAULT_API, featurecontroller.ENABLED);
         }
     }
 
@@ -117,69 +112,55 @@ public class main extends JavaPlugin {
 
     public void enableItemEco() {
         Material currencyItemType = Material.matchMaterial(getConfig().getString("ItemEco.currency-item"));
-        CommandExecutor depositCommand = new depositCommand(econ,this, helper);
-        CommandExecutor withdrawCommand = new withdrawCommand(econ,this, helper);
+        commandSkeleton depositCommand = new commandSkeleton("deposit", new depositCommand(econ,this, helper));
+        commandSkeleton withdrawCommand = new commandSkeleton("withdraw", new withdrawCommand(econ,this, helper));
+        featurecontroller.setCommands(featurecontroller.ITEM_ECO, new commandSkeleton[]{depositCommand,withdrawCommand});
         if(getConfig().getBoolean("ItemEco.enabled")) {
-            if(pluginStatus.getFeatureStatus(pluginStatus.VAULT_API) == pluginStatus.FAILED) {
-                getLogger().warning("Disabling ItemEco as Vault is disabled");
-                pluginStatus.setFeatureStatus(pluginStatus.ITEM_ECO, pluginStatus.DISABLED);
+            if(featurecontroller.getFeatureStatus(featurecontroller.VAULT_API) == featurecontroller.FAILED) {
+                getLogger().warning("ItemEco has been disabled due to Vault API status FAILED. Please install > https://www.spigotmc.org/resources/vault.34315/");
+                featurecontroller.disableFeature(featurecontroller.ITEM_ECO);
             } else if(currencyItemType == null) {
                 getLogger().warning("Disabling ItemEco as item specified in config cannot be found");
-                pluginStatus.setFeatureStatus(pluginStatus.ITEM_ECO, pluginStatus.DISABLED);
+                featurecontroller.disableFeature(featurecontroller.ITEM_ECO);
             } else {
-                this.getCommand("deposit").setExecutor(depositCommand);
-                this.getCommand("withdraw").setExecutor(withdrawCommand);
+                featurecontroller.enableFeature(featurecontroller.ITEM_ECO);
                 getLogger().info("ItemEco is now enabled");
-                pluginStatus.setFeatureStatus(pluginStatus.ITEM_ECO, pluginStatus.ENABLED);
             }
         } else {
-            if(pluginStatus.getFeatureStatus(pluginStatus.VAULT_API) != pluginStatus.ENABLED) {
-                getLogger().warning("ItemEco has been disabled due to Vault API status FAILED. Please install > https://www.spigotmc.org/resources/vault.34315/");
-            } else {
-                getLogger().info("ItemEco disabled by config");
-            }
-            pluginStatus.setFeatureStatus(pluginStatus.ITEM_ECO, pluginStatus.DISABLED);
-        }
-        if(pluginStatus.getFeatureStatus(pluginStatus.ITEM_ECO) != pluginStatus.ENABLED) {
-            this.getCommand("deposit").setExecutor(featureIsDisabledCommandFallback);
-            this.getCommand("withdraw").setExecutor(featureIsDisabledCommandFallback);
+            getLogger().info("ItemEco disabled by config");
+            featurecontroller.disableFeature(featurecontroller.ITEM_ECO);
         }
 
     }
     public void enableAdminCommandBroadcaster() {
-        CommandExecutor checkAllowListCommand = new checkAllowListCommand(getConfig().getStringList("AdminCommandBroadcaster.ignored-commands"), pluginStatus);
+        commandSkeleton checkAllowListCommand = new commandSkeleton("allowedcommands", new checkAllowListCommand(getConfig().getStringList("AdminCommandBroadcaster.ignored-commands")));
         Listener commandListener = new eventListener(getConfig().getStringList("AdminCommandBroadcaster.ignored-commands"));
-        this.getCommand("allowedcommands").setExecutor(checkAllowListCommand);
-        if (getConfig().getBoolean("AdminCommandBroadcaster.enabled") || pluginStatus.getFeatureStatus(pluginStatus.ADMIN_COMMAND_BROADCASTER) != pluginStatus.ENABLED) {
-            getServer().getPluginManager().registerEvents(commandListener, this);
+        featurecontroller.setCommands(featurecontroller.ADMIN_COMMAND_BROADCASTER, new commandSkeleton[]{checkAllowListCommand});
+        featurecontroller.setListeners(featurecontroller.ADMIN_COMMAND_BROADCASTER, new Listener[]{commandListener});
+        featurecontroller.setCustomDisabledMessage(featurecontroller.ADMIN_COMMAND_BROADCASTER, ChatColor.RED + "!!! Admin Command Broadcaster is currently disabled, go nag the admins !!!");
+
+        if (getConfig().getBoolean("AdminCommandBroadcaster.enabled")) {
             getLogger().info("AdminCommandBroadcaster is now enabled");
-            pluginStatus.setFeatureStatus(pluginStatus.ADMIN_COMMAND_BROADCASTER, pluginStatus.ENABLED);
+            featurecontroller.enableFeature(featurecontroller.ADMIN_COMMAND_BROADCASTER);
         } else {
             if(!getConfig().getBoolean("AdminCommandBroadcaster.enabled")) {
                 getLogger().info("AdminCommandBroadcaster disabled by config");
             }
-            pluginStatus.setFeatureStatus(pluginStatus.ADMIN_COMMAND_BROADCASTER, pluginStatus.DISABLED);
+            featurecontroller.disableFeature(featurecontroller.ADMIN_COMMAND_BROADCASTER);
         }
-
-
     }
 
     public void enableAdminToolbox() {
-        CommandExecutor stashCommand = new stashCommand(this);
-        CommandExecutor unstashCommand = new unstashCommand(this);
+        commandSkeleton stashCommand = new commandSkeleton("stash", new stashCommand(this));
+        commandSkeleton unstashCommand = new commandSkeleton("unstash", new unstashCommand(this));
+        featurecontroller.setCommands(featurecontroller.ADMIN_TOOLBOX, new commandSkeleton[]{stashCommand,unstashCommand});
 
-        if (getConfig().getBoolean("AdminToolbox.enabled") || pluginStatus.getFeatureStatus(pluginStatus.ADMIN_TOOLBOX) != pluginStatus.ENABLED) {
-            this.getCommand("stash").setExecutor(stashCommand);
-            this.getCommand("unstash").setExecutor(unstashCommand);
+        if (getConfig().getBoolean("AdminToolbox.enabled") || featurecontroller.getFeatureStatus(featurecontroller.ADMIN_TOOLBOX) != featurecontroller.ENABLED) {
+            featurecontroller.enableFeature(featurecontroller.ADMIN_TOOLBOX);
             getLogger().info("AdminToolbox is now enabled");
-            pluginStatus.setFeatureStatus(pluginStatus.ADMIN_TOOLBOX, pluginStatus.ENABLED);
         } else {
-            if(!getConfig().getBoolean("AdminToolbox.enabled")) {
-                getLogger().info("AdminToolbox disabled by config");
-            }
-            this.getCommand("stash").setExecutor(featureIsDisabledCommandFallback);
-            this.getCommand("unstash").setExecutor(featureIsDisabledCommandFallback);
-            pluginStatus.setFeatureStatus(pluginStatus.ADMIN_TOOLBOX, pluginStatus.DISABLED);
+            getLogger().info("AdminToolbox disabled by config");
+            featurecontroller.disableFeature(featurecontroller.ADMIN_TOOLBOX);
         }
     }
 
@@ -188,21 +169,21 @@ public class main extends JavaPlugin {
     }
 
     public void disableAdminCommandBroadcaster() {
-        pluginStatus.setFeatureStatus(pluginStatus.ADMIN_COMMAND_BROADCASTER, pluginStatus.DISABLED);
+        featurecontroller.disableFeature(featurecontroller.ADMIN_COMMAND_BROADCASTER);
         getLogger().info("AdminCommandBroadcaster is now disabled");
     }
     public void disableAdminToolbox() {
-        pluginStatus.setFeatureStatus(pluginStatus.ADMIN_TOOLBOX, pluginStatus.DISABLED);
+        featurecontroller.disableFeature(featurecontroller.ADMIN_TOOLBOX);
         getLogger().info("AdminToolbox is now disabled");
     }
 
     public void disableItemEco() {
-        pluginStatus.setFeatureStatus(pluginStatus.ITEM_ECO, pluginStatus.DISABLED);
+        featurecontroller.disableFeature(featurecontroller.ITEM_ECO);
         getLogger().info("ItemEco is now disabled");
     }
 
     public void disablePlayerToolbox() {
-        pluginStatus.setFeatureStatus(pluginStatus.PLAYER_TOOLBOX, pluginStatus.DISABLED);
+        featurecontroller.disableFeature(featurecontroller.PLAYER_TOOLBOX);
         getLogger().info("PlayerToolbox is now disabled");
     }
 

@@ -2,6 +2,7 @@ package life.ferret.ferretPlugin.AdminToolbox.commands;
 
 import life.ferret.ferretPlugin.AdminToolbox.fileController;
 import life.ferret.ferretPlugin.AdminToolbox.stash;
+import life.ferret.ferretPlugin.main;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -17,13 +18,15 @@ import org.bukkit.plugin.Plugin;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 public class stashCommand implements CommandExecutor {
 
-    fileController stashFileController;
+    private fileController stashFileController;
+
+    private final String disabledMessage = "Feature is currently disabled";
+
+    private final String name = main.featurecontroller.ADMIN_TOOLBOX;
 
     public stashCommand(Plugin rootPlugin) {
         stashFileController = new fileController(rootPlugin);
@@ -31,54 +34,56 @@ public class stashCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
+        if (main.featurecontroller.continuePermitted(name, commandSender, disabledMessage)) {
+            if (commandSender instanceof ConsoleCommandSender) {
+                commandSender.sendMessage("Console cannot use this command");
+            } else {
+                Player commandUserPlayerObject = Bukkit.getServer().getPlayer(commandSender.getName());
+                if (commandUserPlayerObject != null) {
+                    PlayerInventory inventory = commandUserPlayerObject.getInventory();
+                    double health = commandUserPlayerObject.getHealth();
+                    Location location = commandUserPlayerObject.getLocation();
+                    int experience = commandUserPlayerObject.getTotalExperience();
 
-        if (commandSender instanceof ConsoleCommandSender) {
-            commandSender.sendMessage("Console cannot use this command");
-        } else {
-            Player commandUserPlayerObject = Bukkit.getServer().getPlayer(commandSender.getName());
-            if (commandUserPlayerObject != null) {
-                PlayerInventory inventory = commandUserPlayerObject.getInventory();
-                double health = commandUserPlayerObject.getHealth();
-                Location location = commandUserPlayerObject.getLocation();
-                int experience = commandUserPlayerObject.getTotalExperience();
+                    ArrayList<Map<String, Object>> tmpInventoryArray = new ArrayList<>();
 
-                ArrayList<Map<String, Object>> tmpInventoryArray = new ArrayList<>();
-
-                for (ItemStack item : commandUserPlayerObject.getInventory().getStorageContents()) {
-                    if (item != null) {
-                        tmpInventoryArray.add(item.serialize());
-                    } else {
-                        tmpInventoryArray.add(null);
+                    for (ItemStack item : commandUserPlayerObject.getInventory().getStorageContents()) {
+                        if (item != null) {
+                            tmpInventoryArray.add(item.serialize());
+                        } else {
+                            tmpInventoryArray.add(null);
+                        }
                     }
-                }
 
-                ArrayList<Map<String, Object>> tmpArmourArray = new ArrayList<>();
+                    ArrayList<Map<String, Object>> tmpArmourArray = new ArrayList<>();
 
-                for (ItemStack item : commandUserPlayerObject.getInventory().getArmorContents()) {
-                    if (item != null) {
-                        tmpArmourArray.add(item.serialize());
-                    } else {
-                        tmpArmourArray.add(null);
+                    for (ItemStack item : commandUserPlayerObject.getInventory().getArmorContents()) {
+                        if (item != null) {
+                            tmpArmourArray.add(item.serialize());
+                        } else {
+                            tmpArmourArray.add(null);
+                        }
                     }
-                }
 
-                @SuppressWarnings("unchecked")
-                stash playerStash = new stash(health, tmpInventoryArray.toArray(Map[]::new), location.serialize(), experience, inventory.getItemInOffHand().serialize(), tmpArmourArray.toArray(Map[]::new));
-                try {
-                    stashFileController.createNewStash(commandSender.getName(), playerStash);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                    @SuppressWarnings("unchecked")
+                    stash playerStash = new stash(health, tmpInventoryArray.toArray(Map[]::new), location.serialize(), experience, inventory.getItemInOffHand().serialize(), tmpArmourArray.toArray(Map[]::new));
+                    try {
+                        stashFileController.createNewStash(commandSender.getName(), playerStash);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
-                inventory.clear();
-                commandUserPlayerObject.setGameMode(GameMode.CREATIVE);
-                commandUserPlayerObject.updateInventory();
-                commandUserPlayerObject.sendMessage(ChatColor.GREEN + "Stash store complete");
+                    inventory.clear();
+                    commandUserPlayerObject.setGameMode(GameMode.CREATIVE);
+                    commandUserPlayerObject.updateInventory();
+                    commandUserPlayerObject.sendMessage(ChatColor.GREEN + "Stash store complete");
+                    return true;
+                }
                 return true;
             }
             return true;
         }
-        return true;
+        return false;
     }
 }
 

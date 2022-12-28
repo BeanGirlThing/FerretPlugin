@@ -1,6 +1,7 @@
 package life.ferret.ferretPlugin.FerretCoreTools.commands;
 
-import life.ferret.ferretPlugin.FerretCoreTools.featureStatus;
+import life.ferret.ferretPlugin.FerretCoreTools.featureIsDisabledCommandFallback;
+import life.ferret.ferretPlugin.FerretCoreTools.featureController;
 import life.ferret.ferretPlugin.FerretCoreTools.statusIndicator;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -10,14 +11,16 @@ import org.bukkit.plugin.Plugin;
 
 public class ferretCommand implements CommandExecutor {
 
-    private featureStatus status;
+    private featureController featurecontroller;
     private Plugin rootPlugin;
-
     private String statusMessage;
+    private CommandExecutor featureIsDisabledCommandFallback;
 
-    public ferretCommand(featureStatus status, Plugin rootPlugin) {
-        this.status = status;
+    public ferretCommand(featureController featurecontroller, Plugin rootPlugin) {
+        this.featurecontroller = featurecontroller;
         this.rootPlugin = rootPlugin;
+
+        featureIsDisabledCommandFallback = new featureIsDisabledCommandFallback(null);
 
         StringBuilder authorList = new StringBuilder();
         for(String name : rootPlugin.getDescription().getAuthors()) {
@@ -27,11 +30,11 @@ public class ferretCommand implements CommandExecutor {
         StringBuilder colouredFeatureList = new StringBuilder();
         StringBuilder colouredDependenciesList = new StringBuilder();
 
-        for(statusIndicator feature : status.features) {
+        for(statusIndicator feature : featurecontroller.features) {
             if(!feature.isDependency()) {
-                colouredFeatureList.append(status.returnColourIndicatedFeatureName(feature.getFeatureName())).append(" ");
+                colouredFeatureList.append(featurecontroller.returnColourIndicatedFeatureName(feature.getFeatureName())).append(" ");
             } else {
-                colouredDependenciesList.append(status.returnColourIndicatedFeatureName(feature.getFeatureName())).append(" ");
+                colouredDependenciesList.append(featurecontroller.returnColourIndicatedFeatureName(feature.getFeatureName())).append(" ");
             }
         }
         statusMessage = """
@@ -58,6 +61,39 @@ public class ferretCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
             sender.sendMessage(statusMessage);
+        } else {
+            statusIndicator focusedFeature = null;
+            if(args[0].equalsIgnoreCase("disable")) {
+                rootPlugin.getLogger().info("DISABLE TRIGGER");
+                if (args.length == 2) {
+                    if (featurecontroller.disableFeature(args[1])) {
+                        sender.sendMessage("Feature " + args[1] + " disabled");
+                    } else {
+                        sender.sendMessage("Feature " + args[1] + " not recognised.");
+                        return true;
+                    }
+                } else {
+                    sender.sendMessage("Please supply a feature name and nothing else.");
+                    return true;
+                }
+            } else if (args[0].equalsIgnoreCase("enable")) {
+                rootPlugin.getLogger().info("ENABLE TRIGGER");
+                if (args.length == 2) {
+                    if (featurecontroller.enableFeature(args[1])) {
+                        sender.sendMessage("Feature " + args[1] + " enabled");
+                    } else {
+                        sender.sendMessage("Feature " + args[1] + " not recognised.");
+                        return true;
+                    }
+                } else {
+                    sender.sendMessage("Please supply a feature name and nothing else.");
+                    return true;
+                }
+            } else {
+                    rootPlugin.getLogger().info("DEFAULT TRIGGER");
+                    sender.sendMessage("Command not recognised, please check syntax");
+                    return false;
+            }
         }
 
         return true;

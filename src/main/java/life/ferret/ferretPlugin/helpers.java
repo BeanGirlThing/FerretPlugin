@@ -4,10 +4,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-
-import java.lang.reflect.Method;
-import java.util.logging.Level;
 
 public class helpers {
 
@@ -48,7 +44,4 @@ public class helpers {
         return currencyItem;
     }
 
-    /*
-    Thank you to SainttX again for this https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
-     */
 }
