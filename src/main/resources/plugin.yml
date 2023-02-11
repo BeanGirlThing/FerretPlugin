@@ -87,4 +87,8 @@ permissions:
       FerretPlugin.PlayerToolbox.nethercoord: true
       FerretPlugin.PlayerToolbox.flex: true
     default: true
+  FerretPlugin.BroadcastCommands:
+    description: Broadcasts the commands of any user with this permission
+    default: false
+
 

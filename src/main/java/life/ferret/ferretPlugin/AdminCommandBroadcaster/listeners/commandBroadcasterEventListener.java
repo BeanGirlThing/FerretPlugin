@@ -10,11 +10,11 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import java.util.List;
 
-public class eventListener implements Listener {
+public class commandBroadcasterEventListener implements Listener {
     private List<String> ignoredCommands;
     private final String name = main.featurecontroller.ADMIN_COMMAND_BROADCASTER;
 
-    public eventListener(List<String> ignoredCommands) {
+    public commandBroadcasterEventListener(List<String> ignoredCommands) {
         this.ignoredCommands = ignoredCommands;
     }
 
@@ -23,8 +23,10 @@ public class eventListener implements Listener {
         if(main.featurecontroller.continuePermitted(name, null, null)) {
             Player commandUser = event.getPlayer();
             String[] command = event.getMessage().toLowerCase().split(" ");
-            if (commandUser.isOp() && !this.ignoredCommands.contains(command[0])) {
-                Bukkit.broadcastMessage("Op user " + ChatColor.RED + commandUser.getName() + ChatColor.RESET + " has just run the command: " + ChatColor.GREEN + event.getMessage() + ChatColor.RESET);
+            if (commandUser.isOp() || commandUser.hasPermission("FerretPlugin.BroadcastCommands")) {
+                if (!this.ignoredCommands.contains(command[0])) {
+                    Bukkit.broadcastMessage("Op user " + ChatColor.RED + commandUser.getName() + ChatColor.RESET + " has just run the command: " + ChatColor.GREEN + event.getMessage() + ChatColor.RESET);
+                }
             }
         }
     }

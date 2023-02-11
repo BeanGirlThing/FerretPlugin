@@ -18,6 +18,10 @@ AdminToolbox:
 
 PlayerToolbox:
   enabled: true
+  NetherCoordCalculator:
+    positional-allowed-worlds:
+      - world
+      - creative_world
 
 ItemEco:
   enabled: true

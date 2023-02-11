@@ -1,7 +1,7 @@
 package life.ferret.ferretPlugin;
 
 import life.ferret.ferretPlugin.AdminCommandBroadcaster.commands.checkAllowListCommand;
-import life.ferret.ferretPlugin.AdminCommandBroadcaster.listeners.eventListener;
+import life.ferret.ferretPlugin.AdminCommandBroadcaster.listeners.commandBroadcasterEventListener;
 import life.ferret.ferretPlugin.AdminToolbox.commands.stashCommand;
 import life.ferret.ferretPlugin.AdminToolbox.commands.unstashCommand;
 import life.ferret.ferretPlugin.FerretCoreTools.commandSkeleton;
@@ -63,7 +63,7 @@ public class main extends JavaPlugin {
     }
 
     private void enablePlayerToolbox() {
-        commandSkeleton netherCoordCalculateCommand = new commandSkeleton("nethercoord", new netherCoordCalculateCommand(helper));
+        commandSkeleton netherCoordCalculateCommand = new commandSkeleton("nethercoord", new netherCoordCalculateCommand(helper, getConfig().getStringList("PlayerToolbox.NetherCoordCalculator.positional-allowed-worlds")));
         commandSkeleton flexCommand = new commandSkeleton("flex", new flexCommand(this,helper));
         featurecontroller.setCommands(featurecontroller.PLAYER_TOOLBOX, new commandSkeleton[]{netherCoordCalculateCommand,flexCommand});
         if(getConfig().getBoolean("PlayerToolbox.enabled")) {
@@ -78,8 +78,12 @@ public class main extends JavaPlugin {
         }
     }
 
-    private boolean checkForNBTAPI() {
-        return getServer().getPluginManager().getPlugin("NBTAPI")!=null;
+    private void checkForNBTAPI() {
+        if (getServer().getPluginManager().getPlugin("NBTAPI") != null) {
+            featurecontroller.setFeatureStatus(featurecontroller.NBT_API, featurecontroller.ENABLED);
+        } else {
+            featurecontroller.setFeatureStatus(featurecontroller.NBT_API, featurecontroller.DISABLED);
+        }
     }
 
     private void enableCoreTools() {
@@ -134,7 +138,7 @@ public class main extends JavaPlugin {
     }
     public void enableAdminCommandBroadcaster() {
         commandSkeleton checkAllowListCommand = new commandSkeleton("allowedcommands", new checkAllowListCommand(getConfig().getStringList("AdminCommandBroadcaster.ignored-commands")));
-        Listener commandListener = new eventListener(getConfig().getStringList("AdminCommandBroadcaster.ignored-commands"));
+        Listener commandListener = new commandBroadcasterEventListener(getConfig().getStringList("AdminCommandBroadcaster.ignored-commands"));
         featurecontroller.setCommands(featurecontroller.ADMIN_COMMAND_BROADCASTER, new commandSkeleton[]{checkAllowListCommand});
         featurecontroller.setListeners(featurecontroller.ADMIN_COMMAND_BROADCASTER, new Listener[]{commandListener});
         featurecontroller.setCustomDisabledMessage(featurecontroller.ADMIN_COMMAND_BROADCASTER, ChatColor.RED + "!!! Admin Command Broadcaster is currently disabled, go nag the admins !!!");

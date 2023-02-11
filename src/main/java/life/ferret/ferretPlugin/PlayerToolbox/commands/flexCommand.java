@@ -22,7 +22,6 @@ public class flexCommand implements CommandExecutor {
 
     private Plugin rootPlugin;
     private helpers helper;
-
     private final String name = main.featurecontroller.PLAYER_TOOLBOX;
     private final String disabledMessage = "Feature is currently disabled";
 
@@ -43,10 +42,8 @@ public class flexCommand implements CommandExecutor {
                 TextComponent component;
                 if (Objects.requireNonNull(itemToFlex.getItemMeta()).hasDisplayName()) {
                     component = new TextComponent("You are being flexed on by " + sender.getName() + " with " + ChatColor.LIGHT_PURPLE + "[" + itemToFlex.getItemMeta().getDisplayName() + "]");
-                } else if (itemToFlex.getItemMeta().hasLocalizedName()) {
-                    component = new TextComponent("You are being flexed on by " + sender.getName() + " with " + itemToFlex.getAmount() + " " + itemToFlex.getItemMeta().getLocalizedName());
                 } else {
-                    component = new TextComponent("You are being flexed on by " + sender.getName() + " with " + itemToFlex.getAmount() + " " + itemToFlex.getType().name());
+                    component = new TextComponent("You are being flexed on by " + sender.getName() + " with " + itemToFlex.getAmount() + " " + formatItemName(itemToFlex));
                 }
                 component.setHoverEvent(event);
                 rootPlugin.getServer().spigot().broadcast(component);
@@ -54,5 +51,16 @@ public class flexCommand implements CommandExecutor {
             return true;
         }
         return false;
+    }
+
+    public String formatItemName(ItemStack item) {
+        StringBuilder output = new StringBuilder();
+        String[] itemname = item.getType().name().toLowerCase().split("_");
+        for(String word : itemname) {
+            String firstLetter = word.substring(0,1).toUpperCase();
+            String restOfWord = word.substring(1);
+            output.append(firstLetter + restOfWord + " ");
+        }
+        return output.substring(0,output.length()-1); // No Magic Numbers: -1 here removes the extra space at the end of the string created by concatenating words.
     }
 }

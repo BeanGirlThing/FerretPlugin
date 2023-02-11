@@ -6,7 +6,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class featureController {
 
@@ -182,7 +181,7 @@ public class featureController {
 
     private int findFeatureIndexByName(String featureName) {
         for(int i = 0; i < features.size(); i++) {
-            if(features.get(i).getFeatureName().equals(featureName)) {
+            if(features.get(i).getFeatureName().equalsIgnoreCase(featureName)) {
                 return i;
             }
         }

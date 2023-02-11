@@ -19,7 +19,9 @@ public class ferretCommand implements CommandExecutor {
     public ferretCommand(featureController featurecontroller, Plugin rootPlugin) {
         this.featurecontroller = featurecontroller;
         this.rootPlugin = rootPlugin;
+    }
 
+    private void buildStatusMessage() {
         featureIsDisabledCommandFallback = new featureIsDisabledCommandFallback(null);
 
         StringBuilder authorList = new StringBuilder();
@@ -37,6 +39,7 @@ public class ferretCommand implements CommandExecutor {
                 colouredDependenciesList.append(featurecontroller.returnColourIndicatedFeatureName(feature.getFeatureName())).append(" ");
             }
         }
+
         statusMessage = """
                 ==== Ferret ====
                 Version:\040""" + rootPlugin.getDescription().getVersion() + """
@@ -60,11 +63,10 @@ public class ferretCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
+            buildStatusMessage();
             sender.sendMessage(statusMessage);
         } else {
-            statusIndicator focusedFeature = null;
-            if(args[0].equalsIgnoreCase("disable")) {
-                rootPlugin.getLogger().info("DISABLE TRIGGER");
+            if (args[0].equalsIgnoreCase("disable")) {
                 if (args.length == 2) {
                     if (featurecontroller.disableFeature(args[1])) {
                         sender.sendMessage("Feature " + args[1] + " disabled");
@@ -77,7 +79,6 @@ public class ferretCommand implements CommandExecutor {
                     return true;
                 }
             } else if (args[0].equalsIgnoreCase("enable")) {
-                rootPlugin.getLogger().info("ENABLE TRIGGER");
                 if (args.length == 2) {
                     if (featurecontroller.enableFeature(args[1])) {
                         sender.sendMessage("Feature " + args[1] + " enabled");
@@ -89,10 +90,12 @@ public class ferretCommand implements CommandExecutor {
                     sender.sendMessage("Please supply a feature name and nothing else.");
                     return true;
                 }
+            } else if(args[0].equalsIgnoreCase("reload")) {
+                rootPlugin.reloadConfig();
+                sender.sendMessage(ChatColor.GREEN + "Reloaded the config, Hope you're having a good day :)");
             } else {
-                    rootPlugin.getLogger().info("DEFAULT TRIGGER");
-                    sender.sendMessage("Command not recognised, please check syntax");
-                    return false;
+                sender.sendMessage("Command not recognised, please check syntax");
+                return false;
             }
         }
 

@@ -9,6 +9,8 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.List;
+
 public class netherCoordCalculateCommand implements CommandExecutor {
 
     private helpers helper;
@@ -16,8 +18,11 @@ public class netherCoordCalculateCommand implements CommandExecutor {
     private final String name = main.featurecontroller.PLAYER_TOOLBOX;
     private final String disabledMessage = "Feature is currently disabled";
 
-    public netherCoordCalculateCommand(helpers helper) {
+    private List<String> positional_command_permitted_worlds;
+
+    public netherCoordCalculateCommand(helpers helper, List<String> positional_command_permitted_worlds) {
         this.helper = helper;
+        this.positional_command_permitted_worlds = positional_command_permitted_worlds;
     }
 
     @Override
@@ -34,8 +39,13 @@ public class netherCoordCalculateCommand implements CommandExecutor {
                     sender.sendMessage("Console cannot use current position, to calculate provide coordinates");
                     return true;
                 } else {
-                    inputX = (int) Math.floor(commandUserPlayerObject.getLocation().getX());
-                    inputZ = (int) Math.floor(commandUserPlayerObject.getLocation().getZ());
+                    if(this.positional_command_permitted_worlds.contains(commandUserPlayerObject.getWorld().getName())) {
+                        inputX = (int) Math.floor(commandUserPlayerObject.getLocation().getX());
+                        inputZ = (int) Math.floor(commandUserPlayerObject.getLocation().getZ());
+                    } else {
+                        sender.sendMessage("You cannot use this command positionally in the nether, to calculate provide coordinates");
+                        return true;
+                    }
                 }
             } else {
                 if (args.length != 2) {
