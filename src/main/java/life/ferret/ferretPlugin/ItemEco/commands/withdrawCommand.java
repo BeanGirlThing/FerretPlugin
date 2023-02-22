@@ -31,7 +31,7 @@ public class withdrawCommand implements CommandExecutor {
         this.helper = helper;
         this.econ = econ;
         this.rootPlugin = rootPlugin;
-        ignoredWorlds = rootPlugin.getConfig().getStringList("ItemEco.ignored-worlds");
+        ignoredWorlds = main.configManager.getConfig().getStringList("ItemEco.ignored-worlds");
     }
 
     @Override

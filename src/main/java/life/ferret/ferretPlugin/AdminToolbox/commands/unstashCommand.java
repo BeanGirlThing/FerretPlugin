@@ -1,5 +1,7 @@
 package life.ferret.ferretPlugin.AdminToolbox.commands;
 
+import de.tr7zw.nbtapi.NBT;
+import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import life.ferret.ferretPlugin.AdminToolbox.fileController;
 import life.ferret.ferretPlugin.AdminToolbox.stash;
 import life.ferret.ferretPlugin.main;
@@ -46,18 +48,18 @@ public class unstashCommand implements CommandExecutor {
                             commandUserPlayerObject.updateInventory();
 
                             ArrayList<ItemStack> tmpItemStack = new ArrayList<>();
-                            for (Map<String, Object> item : playerStash.inventory) {
+                            for (String item : playerStash.inventory) {
                                 if (item != null) {
-                                    tmpItemStack.add(ItemStack.deserialize(item));
+                                    tmpItemStack.add(NBT.itemStackFromNBT(NBT.parseNBT(item)));
                                 } else {
                                     tmpItemStack.add(null);
                                 }
                             }
 
                             ArrayList<ItemStack> tmpArmourStack = new ArrayList<>();
-                            for (Map<String, Object> item : playerStash.armourContents) {
+                            for (String item : playerStash.armourContents) {
                                 if (item != null) {
-                                    tmpArmourStack.add(ItemStack.deserialize(item));
+                                    tmpArmourStack.add(NBT.itemStackFromNBT(NBT.parseNBT(item)));
                                 } else {
                                     tmpArmourStack.add(null);
                                 }
@@ -65,7 +67,7 @@ public class unstashCommand implements CommandExecutor {
 
                             playerInventory.setStorageContents(tmpItemStack.toArray(ItemStack[]::new));
                             playerInventory.setArmorContents(tmpArmourStack.toArray(ItemStack[]::new));
-                            playerInventory.setItemInOffHand(ItemStack.deserialize(playerStash.offhandItem));
+                            playerInventory.setItemInOffHand(NBT.itemStackFromNBT(NBT.parseNBT(playerStash.offhandItem)));
                             commandUserPlayerObject.setHealth(playerStash.health);
                             commandUserPlayerObject.setTotalExperience(playerStash.experience);
                             commandUserPlayerObject.teleport(Location.deserialize(playerStash.location));

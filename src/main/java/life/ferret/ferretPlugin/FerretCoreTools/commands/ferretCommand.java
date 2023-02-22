@@ -3,11 +3,15 @@ package life.ferret.ferretPlugin.FerretCoreTools.commands;
 import life.ferret.ferretPlugin.FerretCoreTools.featureIsDisabledCommandFallback;
 import life.ferret.ferretPlugin.FerretCoreTools.featureController;
 import life.ferret.ferretPlugin.FerretCoreTools.statusIndicator;
+import life.ferret.ferretPlugin.main;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.plugin.Plugin;
+
+import java.io.IOException;
 
 public class ferretCommand implements CommandExecutor {
 
@@ -91,7 +95,7 @@ public class ferretCommand implements CommandExecutor {
                     return true;
                 }
             } else if(args[0].equalsIgnoreCase("reload")) {
-                rootPlugin.reloadConfig();
+                main.configManager.reloadConfigFromFile();
                 sender.sendMessage(ChatColor.GREEN + "Reloaded the config, Hope you're having a good day :)");
             } else {
                 sender.sendMessage("Command not recognised, please check syntax");

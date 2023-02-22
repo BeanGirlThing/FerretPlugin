@@ -3,6 +3,7 @@ package life.ferret.ferretPlugin.AdminCommandBroadcaster.listeners;
 import life.ferret.ferretPlugin.main;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,4 +31,5 @@ public class commandBroadcasterEventListener implements Listener {
             }
         }
     }
+
 }

@@ -1,5 +1,7 @@
 package life.ferret.ferretPlugin.AdminToolbox.commands;
 
+import de.tr7zw.nbtapi.NBT;
+import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import life.ferret.ferretPlugin.AdminToolbox.fileController;
 import life.ferret.ferretPlugin.AdminToolbox.stash;
 import life.ferret.ferretPlugin.main;
@@ -45,28 +47,28 @@ public class stashCommand implements CommandExecutor {
                     Location location = commandUserPlayerObject.getLocation();
                     int experience = commandUserPlayerObject.getTotalExperience();
 
-                    ArrayList<Map<String, Object>> tmpInventoryArray = new ArrayList<>();
+                    ArrayList<String> tmpInventoryArray = new ArrayList<>();
 
                     for (ItemStack item : commandUserPlayerObject.getInventory().getStorageContents()) {
                         if (item != null) {
-                            tmpInventoryArray.add(item.serialize());
+                            tmpInventoryArray.add(NBT.itemStackToNBT(item).toString());
                         } else {
                             tmpInventoryArray.add(null);
                         }
                     }
 
-                    ArrayList<Map<String, Object>> tmpArmourArray = new ArrayList<>();
+                    ArrayList<String> tmpArmourArray = new ArrayList<>();
 
                     for (ItemStack item : commandUserPlayerObject.getInventory().getArmorContents()) {
                         if (item != null) {
-                            tmpArmourArray.add(item.serialize());
+                            tmpArmourArray.add(NBT.itemStackToNBT(item).toString());
                         } else {
                             tmpArmourArray.add(null);
                         }
                     }
 
                     @SuppressWarnings("unchecked")
-                    stash playerStash = new stash(health, tmpInventoryArray.toArray(Map[]::new), location.serialize(), experience, inventory.getItemInOffHand().serialize(), tmpArmourArray.toArray(Map[]::new));
+                    stash playerStash = new stash(health, tmpInventoryArray.toArray(String[]::new), location.serialize(), experience, NBT.itemStackToNBT(inventory.getItemInOffHand()).toString(), tmpArmourArray.toArray(String[]::new));
                     try {
                         stashFileController.createNewStash(commandSender.getName(), playerStash);
                     } catch (IOException e) {

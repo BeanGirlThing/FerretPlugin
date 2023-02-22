@@ -26,15 +26,18 @@ public class main extends JavaPlugin {
 
     public static featureController featurecontroller;
 
+    public static configManager configManager;
+
     private helpers helper;
 
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
         featurecontroller = new featureController(this);
+        configManager = new configManager(this);
 
-        Material currencyItemType = Material.matchMaterial(getConfig().getString("ItemEco.currency-item"));
-        helper = new helpers(currencyItemType, getConfig().getInt("ItemEco.value-of-currency-item"));
+        Material currencyItemType = Material.matchMaterial(configManager.getConfig().getString("ItemEco.currency-item"));
+        helper = new helpers(currencyItemType, configManager.getConfig().getInt("ItemEco.value-of-currency-item"));
 
         setupVault();
         enableItemEco();
@@ -63,10 +66,10 @@ public class main extends JavaPlugin {
     }
 
     private void enablePlayerToolbox() {
-        commandSkeleton netherCoordCalculateCommand = new commandSkeleton("nethercoord", new netherCoordCalculateCommand(helper, getConfig().getStringList("PlayerToolbox.NetherCoordCalculator.positional-allowed-worlds")));
+        commandSkeleton netherCoordCalculateCommand = new commandSkeleton("nethercoord", new netherCoordCalculateCommand(helper, configManager.getConfig().getStringList("PlayerToolbox.NetherCoordCalculator.positional-allowed-worlds")));
         commandSkeleton flexCommand = new commandSkeleton("flex", new flexCommand(this,helper));
         featurecontroller.setCommands(featurecontroller.PLAYER_TOOLBOX, new commandSkeleton[]{netherCoordCalculateCommand,flexCommand});
-        if(getConfig().getBoolean("PlayerToolbox.enabled")) {
+        if(configManager.getConfig().getBoolean("PlayerToolbox.enabled")) {
             if(featurecontroller.getFeatureStatus(featurecontroller.NBT_API) == featurecontroller.FAILED) {
                 getLogger().warning("Disabling PlayerToolbox as NBTAPI is disabled. Please install > https://www.spigotmc.org/resources/nbt-api.7939/");
                 featurecontroller.disableFeature(featurecontroller.PLAYER_TOOLBOX);
@@ -115,11 +118,11 @@ public class main extends JavaPlugin {
     }
 
     public void enableItemEco() {
-        Material currencyItemType = Material.matchMaterial(getConfig().getString("ItemEco.currency-item"));
+        Material currencyItemType = Material.matchMaterial(configManager.getConfig().getString("ItemEco.currency-item"));
         commandSkeleton depositCommand = new commandSkeleton("deposit", new depositCommand(econ,this, helper));
         commandSkeleton withdrawCommand = new commandSkeleton("withdraw", new withdrawCommand(econ,this, helper));
         featurecontroller.setCommands(featurecontroller.ITEM_ECO, new commandSkeleton[]{depositCommand,withdrawCommand});
-        if(getConfig().getBoolean("ItemEco.enabled")) {
+        if(configManager.getConfig().getBoolean("ItemEco.enabled")) {
             if(featurecontroller.getFeatureStatus(featurecontroller.VAULT_API) == featurecontroller.FAILED) {
                 getLogger().warning("ItemEco has been disabled due to Vault API status FAILED. Please install > https://www.spigotmc.org/resources/vault.34315/");
                 featurecontroller.disableFeature(featurecontroller.ITEM_ECO);
@@ -137,17 +140,17 @@ public class main extends JavaPlugin {
 
     }
     public void enableAdminCommandBroadcaster() {
-        commandSkeleton checkAllowListCommand = new commandSkeleton("allowedcommands", new checkAllowListCommand(getConfig().getStringList("AdminCommandBroadcaster.ignored-commands")));
-        Listener commandListener = new commandBroadcasterEventListener(getConfig().getStringList("AdminCommandBroadcaster.ignored-commands"));
+        commandSkeleton checkAllowListCommand = new commandSkeleton("allowedcommands", new checkAllowListCommand(configManager.getConfig().getStringList("AdminCommandBroadcaster.ignored-commands")));
+        Listener commandListener = new commandBroadcasterEventListener(configManager.getConfig().getStringList("AdminCommandBroadcaster.ignored-commands"));
         featurecontroller.setCommands(featurecontroller.ADMIN_COMMAND_BROADCASTER, new commandSkeleton[]{checkAllowListCommand});
         featurecontroller.setListeners(featurecontroller.ADMIN_COMMAND_BROADCASTER, new Listener[]{commandListener});
         featurecontroller.setCustomDisabledMessage(featurecontroller.ADMIN_COMMAND_BROADCASTER, ChatColor.RED + "!!! Admin Command Broadcaster is currently disabled, go nag the admins !!!");
 
-        if (getConfig().getBoolean("AdminCommandBroadcaster.enabled")) {
+        if (configManager.getConfig().getBoolean("AdminCommandBroadcaster.enabled")) {
             getLogger().info("AdminCommandBroadcaster is now enabled");
             featurecontroller.enableFeature(featurecontroller.ADMIN_COMMAND_BROADCASTER);
         } else {
-            if(!getConfig().getBoolean("AdminCommandBroadcaster.enabled")) {
+            if(!configManager.getConfig().getBoolean("AdminCommandBroadcaster.enabled")) {
                 getLogger().info("AdminCommandBroadcaster disabled by config");
             }
             featurecontroller.disableFeature(featurecontroller.ADMIN_COMMAND_BROADCASTER);
@@ -159,7 +162,7 @@ public class main extends JavaPlugin {
         commandSkeleton unstashCommand = new commandSkeleton("unstash", new unstashCommand(this));
         featurecontroller.setCommands(featurecontroller.ADMIN_TOOLBOX, new commandSkeleton[]{stashCommand,unstashCommand});
 
-        if (getConfig().getBoolean("AdminToolbox.enabled") || featurecontroller.getFeatureStatus(featurecontroller.ADMIN_TOOLBOX) != featurecontroller.ENABLED) {
+        if (configManager.getConfig().getBoolean("AdminToolbox.enabled") || featurecontroller.getFeatureStatus(featurecontroller.ADMIN_TOOLBOX) != featurecontroller.ENABLED) {
             featurecontroller.enableFeature(featurecontroller.ADMIN_TOOLBOX);
             getLogger().info("AdminToolbox is now enabled");
         } else {

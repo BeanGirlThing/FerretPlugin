@@ -1,5 +1,5 @@
 name: Ferret
-version: 0.0.1-PREALPHA
+version: 0.1.0
 main: life.ferret.ferretPlugin.main
 api-version: 1.19
 author: BeanGirlThing
